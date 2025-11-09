@@ -15,7 +15,7 @@ A beautiful, mobile-first expense tracking and splitting app built with React, T
 - **💾 Data Persistence**: All data stored in localStorage
 - **📱 Responsive Design**: Beautiful UI on mobile and desktop
 - **🎨 Modern UI**: Gradient backgrounds, smooth animations, and polished interactions
-- **📥 Export**: Download expenses as JSON
+- **📥 Export**: Download expenses as CSV or JSON with professional export modal
 
 ## 🚀 Getting Started
 
@@ -44,6 +44,34 @@ npm run build
 ```bash
 npm run preview
 ```
+
+## 🌐 Deploy to Vercel
+
+### Quick Deploy
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new)
+
+### Manual Deployment
+
+1. **Install Vercel CLI** (optional):
+   ```bash
+   npm i -g vercel
+   ```
+
+2. **Deploy from the command line**:
+   ```bash
+   cd /path/to/expense-splitter
+   vercel
+   ```
+
+3. **Or deploy via Vercel Dashboard**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "Add New Project"
+   - Import your Git repository
+   - Vercel will auto-detect the Vite framework
+   - Click "Deploy"
+
+The app is production-ready and will work perfectly on Vercel with zero configuration needed!
 
 ## 📖 How to Use
 

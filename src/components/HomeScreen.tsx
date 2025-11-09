@@ -2,8 +2,9 @@ import React, { useState, useMemo } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { Plus } from 'lucide-react';
-import { Expense } from '../types';
+import type { Expense } from '../types';
 import { ExpenseCard } from './ExpenseCard';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface HomeScreenProps {
   expenses: Expense[];
@@ -19,6 +20,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onDeleteExpense,
 }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    isOpen: boolean;
+    expense: Expense | null;
+  }>({ isOpen: false, expense: null });
 
   // Get expenses for the selected month
   const monthExpenses = useMemo(() => {
@@ -56,6 +61,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     onAddExpense(dateStr);
   };
 
+  const handleDeleteRequest = (expense: Expense) => {
+    setDeleteConfirmation({ isOpen: true, expense });
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirmation.expense) {
+      onDeleteExpense(deleteConfirmation.expense.id);
+    }
+    setDeleteConfirmation({ isOpen: false, expense: null });
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmation({ isOpen: false, expense: null });
+  };
+
   const totalMonthAmount = monthExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
   return (
@@ -84,7 +104,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
           <button
             onClick={handleAddClick}
-            className="bg-white text-blue-600 p-4 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            className="bg-white text-blue-600 p-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 active:scale-95"
             aria-label="Add expense"
           >
             <Plus className="w-6 h-6" />
@@ -120,17 +140,34 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           </div>
         ) : (
           <>
-            {monthExpenses.map((expense) => (
-              <ExpenseCard
+            {monthExpenses.map((expense, index) => (
+              <div
                 key={expense.id}
-                expense={expense}
-                onEdit={onEditExpense}
-                onDelete={onDeleteExpense}
-              />
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <ExpenseCard
+                  expense={expense}
+                  onEdit={onEditExpense}
+                  onDelete={onDeleteExpense}
+                  onDeleteRequest={handleDeleteRequest}
+                />
+              </div>
             ))}
           </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteConfirmation.isOpen}
+        title="Delete Expense"
+        message={`Are you sure you want to delete "${deleteConfirmation.expense?.title}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        type="danger"
+      />
     </div>
   );
 };

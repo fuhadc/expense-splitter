@@ -71,7 +71,7 @@ function App() {
             <nav className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentScreen('home')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${
                   currentScreen === 'home'
                     ? 'bg-blue-500 text-white shadow-lg'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -82,14 +82,14 @@ function App() {
               </button>
               <button
                 onClick={handleOpenAddModal}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-all"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-gray-600 hover:bg-gray-100 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 <PlusCircle className="w-5 h-5" />
                 Add
               </button>
               <button
                 onClick={() => setCurrentScreen('summary')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 hover:scale-105 active:scale-95 ${
                   currentScreen === 'summary'
                     ? 'bg-blue-500 text-white shadow-lg'
                     : 'text-gray-600 hover:bg-gray-100'
@@ -121,14 +121,20 @@ function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
         {currentScreen === 'home' && (
-          <HomeScreen
-            expenses={expenses}
-            onAddExpense={handleAddExpense}
-            onEditExpense={handleEditExpense}
-            onDeleteExpense={handleDeleteExpense}
-          />
+          <div key="home" className="h-full animate-fadeIn">
+            <HomeScreen
+              expenses={expenses}
+              onAddExpense={handleAddExpense}
+              onEditExpense={handleEditExpense}
+              onDeleteExpense={handleDeleteExpense}
+            />
+          </div>
         )}
-        {currentScreen === 'summary' && <SummaryScreen expenses={expenses} />}
+        {currentScreen === 'summary' && (
+          <div key="summary" className="h-full animate-fadeIn">
+            <SummaryScreen expenses={expenses} />
+          </div>
+        )}
       </main>
 
       {/* Mobile Bottom Navigation */}
@@ -136,7 +142,7 @@ function App() {
         <div className="grid grid-cols-3 gap-1 px-2 py-2">
           <button
             onClick={() => setCurrentScreen('home')}
-            className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all duration-200 active:scale-95 ${
               currentScreen === 'home'
                 ? 'bg-blue-50 text-blue-600'
                 : 'text-gray-600 hover:bg-gray-50'
@@ -150,9 +156,9 @@ function App() {
 
           <button
             onClick={handleOpenAddModal}
-            className="flex flex-col items-center justify-center py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all"
+            className="flex flex-col items-center justify-center py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all duration-200 active:scale-95"
           >
-            <div className="w-12 h-12 -mt-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
+            <div className="w-12 h-12 -mt-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110 active:scale-95">
               <PlusCircle className="w-7 h-7 text-white" />
             </div>
             <span className="text-xs mt-1">Add</span>
@@ -160,7 +166,7 @@ function App() {
 
           <button
             onClick={() => setCurrentScreen('summary')}
-            className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all ${
+            className={`flex flex-col items-center justify-center py-3 rounded-xl transition-all duration-200 active:scale-95 ${
               currentScreen === 'summary'
                 ? 'bg-blue-50 text-blue-600'
                 : 'text-gray-600 hover:bg-gray-50'

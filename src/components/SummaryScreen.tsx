@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   PieChart,
   Pie,
@@ -9,12 +9,14 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import { Download, TrendingUp, Users, DollarSign } from 'lucide-react';
-import { Expense } from '../types';
+import type { Expense } from '../types';
 import { calculateBalance, getMonthlyTotals, formatCurrency } from '../utils/calculations';
-import { downloadJSON } from '../utils/storage';
+import { downloadJSON, downloadCSV } from '../utils/storage';
+import { ConfirmationModal } from './ConfirmationModal';
+import { Toast } from './Toast';
+import { ExportModal } from './ExportModal';
 
 interface SummaryScreenProps {
   expenses: Expense[];
@@ -23,29 +25,65 @@ interface SummaryScreenProps {
 export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
   const balance = useMemo(() => calculateBalance(expenses), [expenses]);
   const monthlyTotals = useMemo(() => getMonthlyTotals(expenses, 6), [expenses]);
+  const [settleConfirmation, setSettleConfirmation] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [toast, setToast] = useState<{ isOpen: boolean; message: string; type: 'success' | 'error' | 'info' }>({
+    isOpen: false,
+    message: '',
+    type: 'success',
+  });
 
   const pieData = [
-    { name: 'Person A', value: balance.totalA, color: '#3b82f6' },
-    { name: 'Person B', value: balance.totalB, color: '#a855f7' },
+    { name: 'Fuhad', value: balance.totalA, color: '#3b82f6' },
+    { name: 'Jayasurya', value: balance.totalB, color: '#a855f7' },
   ];
 
-  const handleExport = () => {
-    downloadJSON();
+  const handleExport = (format: 'csv' | 'json') => {
+    try {
+      if (format === 'csv') {
+        downloadCSV();
+        setToast({
+          isOpen: true,
+          message: 'Expenses exported as CSV successfully!',
+          type: 'success',
+        });
+      } else {
+        downloadJSON();
+        setToast({
+          isOpen: true,
+          message: 'Expenses exported as JSON successfully!',
+          type: 'success',
+        });
+      }
+    } catch {
+      setToast({
+        isOpen: true,
+        message: 'Failed to export expenses',
+        type: 'error',
+      });
+    }
   };
 
   const handleSettleUp = () => {
     if (balance.owedBy === 'none') {
-      alert('All settled up! No one owes anyone.');
+      setToast({
+        isOpen: true,
+        message: 'All settled up! No one owes anyone.',
+        type: 'info',
+      });
       return;
     }
     
-    const message = `Person ${balance.owedBy} owes Person ${
-      balance.owedBy === 'A' ? 'B' : 'A'
-    } ${formatCurrency(balance.owedAmount)}`;
-    
-    if (window.confirm(`${message}\n\nMark as settled?`)) {
-      alert('Settlement recorded! (This is a demo action)');
-    }
+    setSettleConfirmation(true);
+  };
+
+  const handleConfirmSettle = () => {
+    setSettleConfirmation(false);
+    setToast({
+      isOpen: true,
+      message: 'Settlement recorded! (Demo action)',
+      type: 'success',
+    });
   };
 
   return (
@@ -55,11 +93,11 @@ export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Summary</h1>
           <button
-            onClick={handleExport}
+            onClick={() => setExportModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors shadow-lg"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export JSON</span>
+            <span className="hidden sm:inline">Export Data</span>
           </button>
         </div>
 
@@ -79,7 +117,7 @@ export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
             ) : (
               <div className="text-center py-8">
                 <p className="text-lg opacity-90 mb-2">
-                  Person {balance.owedBy} owes Person {balance.owedBy === 'A' ? 'B' : 'A'}
+                  {balance.owedBy === 'A' ? 'Fuhad' : 'Jayasurya'} owes {balance.owedBy === 'A' ? 'Jayasurya' : 'Fuhad'}
                 </p>
                 <p className="text-5xl font-bold mb-6">
                   {formatCurrency(balance.owedAmount)}
@@ -99,7 +137,7 @@ export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Person A Total</h3>
+              <h3 className="text-sm font-medium text-gray-600">Fuhad Total</h3>
               <div className="w-3 h-3 rounded-full bg-blue-500"></div>
             </div>
             <p className="text-3xl font-bold text-gray-900">{formatCurrency(balance.totalA)}</p>
@@ -107,7 +145,7 @@ export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
 
           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium text-gray-600">Person B Total</h3>
+              <h3 className="text-sm font-medium text-gray-600">Jayasurya Total</h3>
               <div className="w-3 h-3 rounded-full bg-purple-500"></div>
             </div>
             <p className="text-3xl font-bold text-gray-900">{formatCurrency(balance.totalB)}</p>
@@ -142,7 +180,10 @@ export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={(entry) => {
+                      const data = entry as unknown as { name: string; percent: number };
+                      return `${data.name}: ${((data.percent || 0) * 100).toFixed(0)}%`;
+                    }}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -216,6 +257,36 @@ export const SummaryScreen: React.FC<SummaryScreenProps> = ({ expenses }) => {
           </div>
         </div>
       </div>
+
+      {/* Settle Up Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={settleConfirmation}
+        title="Settle Up"
+        message={`${balance.owedBy === 'A' ? 'Fuhad' : 'Jayasurya'} owes ${
+          balance.owedBy === 'A' ? 'Jayasurya' : 'Fuhad'
+        } ${formatCurrency(balance.owedAmount)}. Mark as settled?`}
+        confirmLabel="Settle Up"
+        cancelLabel="Cancel"
+        onConfirm={handleConfirmSettle}
+        onCancel={() => setSettleConfirmation(false)}
+        type="info"
+      />
+
+      {/* Export Modal */}
+      <ExportModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
+        onExport={handleExport}
+        expenseCount={expenses.length}
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        isOpen={toast.isOpen}
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, isOpen: false })}
+      />
     </div>
   );
 };

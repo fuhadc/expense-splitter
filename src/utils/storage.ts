@@ -1,4 +1,4 @@
-import { Expense } from '../types';
+import type { Expense } from '../types';
 
 const STORAGE_KEY = 'expenses';
 
@@ -57,6 +57,44 @@ export const downloadJSON = (): void => {
   const a = document.createElement('a');
   a.href = url;
   a.download = `expenses-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+export const exportExpensesCSV = (): string => {
+  const expenses = loadExpenses();
+  
+  if (expenses.length === 0) {
+    return 'Date,Title,Amount,Paid By,Type,Note\n';
+  }
+
+  // CSV Header
+  const header = 'Date,Title,Amount (₹),Paid By,Type,Note\n';
+  
+  // CSV Rows
+  const rows = expenses.map((expense) => {
+    const date = new Date(expense.date).toLocaleDateString('en-IN');
+    const title = `"${expense.title.replace(/"/g, '""')}"`;
+    const amount = expense.amount.toFixed(2);
+    const paidBy = expense.paidBy === 'A' ? 'Fuhad' : 'Jayasurya';
+    const type = expense.type.charAt(0).toUpperCase() + expense.type.slice(1);
+    const note = expense.note ? `"${expense.note.replace(/"/g, '""')}"` : '';
+    
+    return `${date},${title},${amount},${paidBy},${type},${note}`;
+  }).join('\n');
+
+  return header + rows;
+};
+
+export const downloadCSV = (): void => {
+  const csv = exportExpensesCSV();
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `expenses-${new Date().toISOString().split('T')[0]}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
